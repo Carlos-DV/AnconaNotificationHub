@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>AnconaNotificationHub.Contracts</AssemblyName>
+    <RootNamespace>AnconaNotificationHub.Contracts</RootNamespace>
+    <PackageId>AnconaNotificationHub.Contracts</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Carlos-DV</Authors>
+    <Description>Sobre de eventos que publican los servicios para AnconaNotificationHub.</Description>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+</Project>

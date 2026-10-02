@@ -11,6 +11,10 @@ public class GroupNameTests
     [InlineData("ancona", "perm", "Permission.Ajuste de inventario.View", "ancona:perm:permission.ajuste-de-inventario.view")]
     [InlineData("ancona", "perm", "Permission.Auditorías.View", "ancona:perm:permission.auditorias.view")]
     [InlineData("ancona", "perm", " Permission.Diseño  de Etiquetas.View ", "ancona:perm:permission.diseno-de-etiquetas.view")]
+    [InlineData("ancona", "perm", "Permission.Reporte Max/Min Detallado por Sucursal.View", "ancona:perm:permission.reporte-max-min-detallado-por-sucursal.view")]
+    [InlineData("ancona", "perm", "Permission.Transito, Recibo e Ingresos.View", "ancona:perm:permission.transito-recibo-e-ingresos.view")]
+    [InlineData("ancona", "perm", "Permission.Alta - Baja.View", "ancona:perm:permission.alta-baja.view")]
+    [InlineData("ancona", "perm", "¿Permission.Ventas?", "ancona:perm:permission.ventas")]
     [InlineData("ancona", "entity", "warranty.return:0199-abc", "ancona:entity:warranty.return:0199-abc")]
     [InlineData("ancona", "all", null, "ancona:all")]
     [InlineData("ancona", "all", "ignored", "ancona:all")]
@@ -30,7 +34,8 @@ public class GroupNameTests
     [InlineData("ancona", "topic", "warranty/returns")]
     [InlineData("ancona", "topic", "warranty returns")]
     [InlineData("ancona", "topic", "garantías")]
-    [InlineData("ancona", "perm", "Permission.Ventas/Caja.View")]
+    [InlineData("ancona", "perm", "   ")]
+    [InlineData("ancona", "perm", "¿?")]
     public void TryCreate_rejects_invalid_parts(string tenant, string type, string value)
     {
         Assert.False(GroupName.TryCreate(tenant, type, value, out var group));

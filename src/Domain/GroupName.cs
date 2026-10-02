@@ -47,8 +47,9 @@ public sealed partial record GroupName
     private static string Normalize(string? part) => (part ?? string.Empty).Trim().ToLowerInvariant();
 
     /// <summary>
-    /// Los permisos vienen de la BD con espacios y acentos ("Permission.Auditorías.View"): se quitan los
-    /// acentos y los espacios pasan a "-", así conexión y publisher llegan al mismo grupo con el ClaimValue tal cual.
+    /// Los permisos vienen de la BD con espacios, acentos y signos ("Permission.Reporte Max/Min Detallado.View"):
+    /// se quitan los acentos y cada tramo de otros caracteres pasa a un solo "-", así conexión y publisher llegan
+    /// al mismo grupo con el ClaimValue tal cual.
     /// </summary>
     private static string NormalizePermission(string? value)
     {
@@ -60,11 +61,11 @@ public sealed partial record GroupName
                 builder.Append(c);
         }
 
-        return WhitespacePattern().Replace(builder.ToString(), "-");
+        return PermissionSeparatorPattern().Replace(builder.ToString(), "-").Trim('-');
     }
 
-    [GeneratedRegex(@"\s+")]
-    private static partial Regex WhitespacePattern();
+    [GeneratedRegex("[^a-z0-9._:]+")]
+    private static partial Regex PermissionSeparatorPattern();
 
     [GeneratedRegex("^[a-z0-9._-]+$")]
     private static partial Regex TenantPattern();

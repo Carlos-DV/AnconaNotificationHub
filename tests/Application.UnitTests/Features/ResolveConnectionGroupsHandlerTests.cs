@@ -44,7 +44,7 @@ public class ResolveConnectionGroupsHandlerTests
     [Fact]
     public async Task Skips_invalid_values_and_duplicates()
     {
-        var resolver = new FakeUserGroupResolver(new UserGroups(["001", "001", " "], ["Ver/garantías", "warranty.view"]));
+        var resolver = new FakeUserGroupResolver(new UserGroups(["001", "001", " "], ["¿?", "warranty.view"]));
 
         var groups = await CreateHandler(resolver).HandleAsync("ancona", 38, CancellationToken.None);
 

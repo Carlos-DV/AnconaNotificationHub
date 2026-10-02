@@ -3,21 +3,17 @@
 ## Estado (2026-10-02)
 
 - **Diseño aprobado** por secciones: `docs/superpowers/specs/2026-09-30-notification-hub-design.md`.
-- **Plan 1 implementado** (API + Contracts): `docs/superpowers/plans/2026-09-30-notification-hub-api.md`.
-  Tasks 1–15 hechas en la rama `feat/notification-hub-api`; 51 tests unitarios en verde.
-  Consultas del resolver verificadas en SSMS (DEV).
-- **Task 16 verificada en DEV el 2026-10-02** (falta solo cerrar el pendiente de abajo): exchange, cola,
-  `.retry`/`.error` y binding `#` existen; `/health` Healthy; WebSocket; grupos resueltos (uid 38: 336);
-  evento a `user` + `topic` llega 2 veces (dedupe por `eventId`); `Subscribe user 99` rechazado; evento
-  de 10 min descartado; `Audience` vacío → 3 reintentos de 30 s → `AnconaNotificationHub-DEV.error`.
-  Herramientas locales en `docs/tools/` (`README-demo.md`, `smoke-client.html`, `publish-test-event.ps1`)
-  y secretos en `docs/README-secretos.md`.
-- **Pendiente (retomar aquí):** permisos con espacios o acentos (`Permission.Ajuste de inventario.View`,
-  `Permission.Auditorías.View`) no forman grupo: `GroupName` solo acepta `[a-z0-9._:-]` y los omite con un
-  Debug (`Grupo … inválido; se omite`). Al uid 38 le quita 107 permisos. Propuesta: normalizar en
-  `GroupName.Normalize` (quitar acentos, espacios → `-`) para que conexión y despacho coincidan y el
-  publisher siga mandando el `ClaimValue` tal cual; tests en `Domain`, commit `fix(domain)` aparte. Luego
-  Step 6 de la Task 16 (corregir en el plan la expectativa del caso "API detenida", ver Gotchas).
+- **Plan 1 terminado** (API + Contracts): `docs/superpowers/plans/2026-09-30-notification-hub-api.md`.
+  Tasks 1–15 en `feat/notification-hub-api` (mergeada a `development`, PR #1). Consultas del resolver
+  verificadas en SSMS (DEV).
+- **Task 16 verificada en DEV el 2026-10-02:** exchange, cola, `.retry`/`.error` y binding `#` existen;
+  `/health` Healthy; WebSocket; grupos resueltos; evento a `user` + `topic` llega 2 veces (dedupe por
+  `eventId`); `Subscribe user 99` rechazado; evento de 10 min descartado; `Audience` vacío → 3 reintentos
+  de 30 s → `AnconaNotificationHub-DEV.error`. Herramientas locales en `docs/tools/` (`README-demo.md`,
+  `smoke-client.html`, `publish-test-event.ps1`) y secretos en `docs/README-secretos.md`.
+- **Permisos con espacios, acentos o signos** (`Permission.Auditorías.View`,
+  `Permission.Transito, Recibo e Ingresos.View`) ya forman grupo (rama `fix/group-name-normalization`,
+  65 tests; verificado en DEV con el uid 38 sin grupos omitidos). Ver "Sobre y grupos".
 - **Pendiente:** los planes 2 y 3 se escriben **en sus propios proyectos**: plan 2 en `bweb-next-fe`,
   plan 3 en `AnconaWarrantyReturns` (spec §6 y §7 como base).
 - **`OpenTelemetry.Api` fijado en 1.19.1** en `Infrastructure.csproj`: LilHermes 1.0.0 trae 1.4.0
@@ -83,6 +79,18 @@ creado siempre con `NotificationEvent.Create(...)` (payload en camelCase). Viaja
 - `Subscribe` solo acepta `topic`/`entity`, máx. 50 por conexión, pasa por `ISubscriptionPolicy`
   (hoy permite todo dentro del tenant; punto de extensión para exigir permiso por topic).
 
+### Memoria y escala (analizado el 2026-10-02)
+
+- Datos de `BO_ADMON`: 953 usuarios, 56 permisos en promedio, máx. 400, 67 con más de 200, 409 distintos.
+- Cada grupo de una conexión cuesta ~150–200 B (entrada en el grupo + `HashSet` de la conexión + su
+  string). Estimado: ~10 MB con 1000 conexiones, ~20 MB con 2000. Publicar solo busca los grupos del
+  evento; en .NET 10 desconectar solo recorre los grupos de esa conexión.
+- **Redis no reduce memoria:** cada servidor guarda los grupos de sus conexiones y además se suscribe a un
+  canal por grupo. Sirve solo para tener 2+ instancias.
+- Se descartó por ahora resolver `perm` al publicar (consultar usuarios con el permiso y mandar a sus
+  grupos `user`): ahorra ~10 MB a cambio de SQL en el despacho. Reconsiderar si hay varias instancias,
+  miles de permisos por usuario, o si los cambios de permisos deben aplicar sin reconectar.
+
 ## Dónde vive cada dato
 
 | Dato | BD |
@@ -121,8 +129,10 @@ Si el resolver falla, la conexión sigue solo con `user` y `all` (Warning). Impl
   `Root` da `Invalid object name 'UserRoles'` al conectar.
 - **CORS en DEV** solo permite `http://localhost:3002`: el smoke client se sirve ahí; `file://`,
   `127.0.0.1` u otro puerto dan `NetworkError` en `negotiate`.
-- `ClaimValue` viene con mayúsculas (`Permission.<Pantalla>.View`); `GroupName` lo pasa a minúsculas
-  (`ancona:perm:permission.<pantalla>.view`).
+- `ClaimValue` viene con mayúsculas, espacios, acentos y signos. Solo para `perm`, `GroupName` lo pasa a
+  minúsculas, quita acentos y cambia cada tramo fuera de `[a-z0-9._:]` por un `-`
+  (`Permission.Reporte Max/Min.View` → `ancona:perm:permission.reporte-max-min.view`). El publisher manda
+  el `ClaimValue` tal cual. `topic`/`entity` siguen estrictos (`[a-z0-9._:-]`): un nombre mal escrito truena.
 
 ## Publishers
 

@@ -25,6 +25,16 @@ public class NotificationEventValidatorTests
     }
 
     [Fact]
+    public void Permission_audience_is_normalized_like_on_connect()
+    {
+        var evt = TestEvents.Valid(Audience.Perm("Permission.Ajuste de inventario.View"));
+
+        var groups = NotificationEventValidator.ValidateAndResolveGroups(evt, DefaultMaxPayload);
+
+        Assert.Equal(["ancona:perm:permission.ajuste-de-inventario.view"], groups.Select(g => g.Value));
+    }
+
+    [Fact]
     public void Empty_event_id_is_invalid() => AssertInvalid(e => e.EventId = Guid.Empty);
 
     [Theory]

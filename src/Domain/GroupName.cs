@@ -1,4 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Domain;
@@ -11,6 +13,7 @@ public sealed partial record GroupName
 {
     public const int MaxValueLength = 200;
     private const string AllType = "all";
+    private const string PermType = "perm";
 
     public string Value { get; }
 
@@ -31,7 +34,7 @@ public sealed partial record GroupName
             return true;
         }
 
-        var normalizedValue = Normalize(value);
+        var normalizedValue = normalizedType == PermType ? NormalizePermission(value) : Normalize(value);
         if (normalizedValue.Length > MaxValueLength || !ValuePattern().IsMatch(normalizedValue))
             return false;
 
@@ -42,6 +45,26 @@ public sealed partial record GroupName
     public override string ToString() => Value;
 
     private static string Normalize(string? part) => (part ?? string.Empty).Trim().ToLowerInvariant();
+
+    /// <summary>
+    /// Los permisos vienen de la BD con espacios y acentos ("Permission.Auditorías.View"): se quitan los
+    /// acentos y los espacios pasan a "-", así conexión y publisher llegan al mismo grupo con el ClaimValue tal cual.
+    /// </summary>
+    private static string NormalizePermission(string? value)
+    {
+        var decomposed = Normalize(value).Normalize(NormalizationForm.FormD);
+        var builder = new StringBuilder(decomposed.Length);
+        foreach (var c in decomposed)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                builder.Append(c);
+        }
+
+        return WhitespacePattern().Replace(builder.ToString(), "-");
+    }
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespacePattern();
 
     [GeneratedRegex("^[a-z0-9._-]+$")]
     private static partial Regex TenantPattern();

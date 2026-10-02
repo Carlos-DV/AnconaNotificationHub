@@ -14,6 +14,8 @@
     <PackageReference Include="Dapper" Version="2.1.72" />
     <PackageReference Include="LilHermes" Version="1.0.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+    <!-- LilHermes 1.0.0 trae OpenTelemetry.Api 1.4.0 (GHSA-g94r-2vxg-569j); quitar cuando LilHermes lo actualice. -->
+    <PackageReference Include="OpenTelemetry.Api" Version="1.19.1" />
   </ItemGroup>
 
   <ItemGroup>

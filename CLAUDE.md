@@ -20,8 +20,11 @@
   Step 6 de la Task 16 (corregir en el plan la expectativa del caso "API detenida", ver Gotchas).
 - **Pendiente:** los planes 2 y 3 se escriben **en sus propios proyectos**: plan 2 en `bweb-next-fe`,
   plan 3 en `AnconaWarrantyReturns` (spec §6 y §7 como base).
-- **Pendiente:** LilHermes 1.0.0 trae `OpenTelemetry.Api` 1.4.0 con vulnerabilidad moderada
-  (NU1902, GHSA-g94r-2vxg-569j). Corregir en LilHermes o fijar una versión más nueva en Infrastructure.
+- **`OpenTelemetry.Api` fijado en 1.19.1** en `Infrastructure.csproj`: LilHermes 1.0.0 trae 1.4.0
+  (GHSA-g94r-2vxg-569j, memoria excesiva en los parsers de baggage/B3/Jaeger). No era explotable aquí
+  (LilHermes parsea `traceparent` por su cuenta y la API no registra OpenTelemetry), pero el warning NU1902
+  ensucia el build. **Pendiente en LilHermes** (repo `github.com/Carlos-DV/LilHermes`; la carpeta local
+  `Valhalla/LilHermes` no es el código publicado): subir la dependencia, publicar 1.0.1 y quitar el pin.
 - `docs/` es **local, no se versiona** (va en `.gitignore`, igual que en AnconaWarrantyReturns).
 
 ## Qué es
